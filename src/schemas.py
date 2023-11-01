@@ -54,7 +54,7 @@ class Opinion:
     updateStamp: Optional[Any] = None
     rating: Optional[int] = None
     source: Optional[Source] = None
-    multiCardSpecs: Optional[Dict] = None
+    multiCardSpecs: Optional[Any] = None
     period: Optional[Any] = None
     characteristicGrades: Optional[List[CharacterisricGrade]] = None
     plus: Optional[Any] = None
