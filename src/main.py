@@ -1,25 +1,24 @@
-from parser import get_product_id, get_opinions
-
+import asyncio
+from parser import gather_data, get_opinions
+from time import time
+from datetime import datetime
 
 def main():
-    url ="https://www.dns-shop.ru/product/bf41006e0b2fed20/videokarta-palit-geforce-rtx-4060-dual-ne64060019p1-1070d/"
-    url = "https://www.dns-shop.ru/product/bbd9468ebcb2ed20/156-noutbuk-gigabyte-g5-mf-cernyj/"
-    url = "https://www.dns-shop.ru/product/d1a3848c5f26ed20/korpus-cougar-duoface-pro-rgb-cgr-5ad1b-rgb--cernyj/"
-    url = "https://www.dns-shop.ru/product/d1a3848c5f26ed20/korpus-cougar-duoface-pro-rgb-cgr-5ad1b-rgb--cernyj/"
+    products = []
 
-    opinions = get_opinions(url)
+    with open("data", "r") as file:
+        for line in file:
+            products.append(line.rstrip())
 
-    print(json.dumps(dataclasses.asdict(opinion[0])))
+    
+    start_time = datetime.now()
+    product_id = products[0]
+    asyncio.run(gather_data(product_id))
+    # get_opinions(product_id)
+    end_time = datetime.now()
+    execution_time = end_time - start_time
+    print(execution_time)
 
-    # if opinions == None:
-    #     return
-
-    # for count, opinion in enumerate(opinions):
-    #     try:
-    #         print(opinion.plus + "\n")
-    #     except:
-    #         continue
-
-
+            
 if __name__ == "__main__":
     main()
