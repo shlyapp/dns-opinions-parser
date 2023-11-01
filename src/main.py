@@ -9,14 +9,16 @@ def main():
 
     opinions = get_opinions(url)
 
-    if opinions == None:
-        return
+    print(json.dumps(dataclasses.asdict(opinion[0])))
 
-    for count, opinion in enumerate(opinions):
-        try:
-            print(opinion.plus + "\n")
-        except:
-            continue
+    # if opinions == None:
+    #     return
+
+    # for count, opinion in enumerate(opinions):
+    #     try:
+    #         print(opinion.plus + "\n")
+    #     except:
+    #         continue
 
 
 if __name__ == "__main__":

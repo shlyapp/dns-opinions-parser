@@ -4,40 +4,41 @@ import math
 from marshmallow_dataclass import class_schema
 from bs4 import BeautifulSoup
 import re
+from seleniumbase import Driver
+from urllib.parser import quote
+from typing import List
 
 from schemas import Opinion
-from config import get_data_json, headers, cookies
+from config import get_data_json, headers
 
 
-def get_product_id(url: str):
-    response = requests.get(
-        url=url,
-        cookies=cookies,
-        headers=headers,
-    )
+def get_id_products(search: str) -> List[int]:
+    url = "https://www.dns-shop.ru/search/?q={0}&p={1}".format(quote(search), quote("1"))
 
-    if response.status_code != 200:
-        print("[ERROR] Не удается получить соддержимое сайта.")
-        return -1
+    driver = Driver(uc=True)
+    driver.get(url)
 
-    soup = BeautifulSoup(response.text, "html.parser")
-    script_tag = soup.find("script", text=re.compile(r'window.cardMicrodataUrl = \'/product/microdata/[^/]+/\';'))
+    response = driver.page_source
+    soup = BeautifulSoup(response, "html.parser")
+    pages = soup.find_all("li", {"class": "pagination-widget__page",
+                                "data-role": "pagination-page"})
 
-    if script_tag:
-        match = re.search(r'window.cardMicrodataUrl = \'/product/microdata/([^/]+)/\';', script_tag.string)
-        if match:
-            value = match.group(1)
-            return value
-    
-    return -1
+    pages = int(pages[-1]['data-page-number'])
+    product_id = []
+
+    for page in range(1, pages):
+        url = "https://www.dns-shop.ru/search/?q={0}&p={1}".format(quote(search), quote(str(page)))
+        soup = BeautifulSoup(response, "html.parser")
+        products = soup.find_all("div", {"data-id": "product",
+                                        "class": "catalog-product ui-button-widget"})
+
+        for product in products:
+            product_id.append(product['data-product'])
+
+    return product_id
 
 
-def get_opinions(url: str) -> List[Opinion]:
-    id = get_product_id(url)
-
-    if id == -1:
-        return
-
+def get_opinions(id: int) -> List[Opinion]:
     session = requests.Session()
     response = session.post(
             url='https://www.dns-shop.ru/opinion/opinions/get/',
