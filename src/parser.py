@@ -2,16 +2,36 @@ from typing import List
 import requests
 import math
 from marshmallow_dataclass import class_schema
+from bs4 import BeautifulSoup
+import re
 
 from schemas import Opinion
-from config import get_data_json, headers
+from config import get_data_json, headers, headers_list, cookies
 
 
-def get_opinions() -> List[Opinion]:
+def get_product_id(url: str):
+    response = requests.get(
+        url=url,
+        cookies=cookies,
+        headers=headers,
+    )
+    soup = BeautifulSoup(response.text, "html.parser")
+    script_tag = soup.find("script", text=re.compile(r'window.cardMicrodataUrl = \'/product/microdata/[^/]+/\';'))
+
+    if script_tag:
+        match = re.search(r'window.cardMicrodataUrl = \'/product/microdata/([^/]+)/\';', script_tag.string)
+        if match:
+            value = match.group(1)
+            return value
+    
+    return -1
+
+
+def get_opinions(id: int) -> List[Opinion]:
     session = requests.Session()
     response = session.post(
             url='https://www.dns-shop.ru/opinion/opinions/get/',
-            data=get_data_json(),
+            data=get_data_json(object_id=id),
             headers=headers)
 
     data = response.json()
@@ -27,7 +47,8 @@ def get_opinions() -> List[Opinion]:
         offset = i * 10
         response = session.post(
             url='https://www.dns-shop.ru/opinion/opinions/get/',
-            data=get_data_json(offset=offset),
+            data=get_data_json(object_id=id,
+                               offset=offset),
             headers=headers).json()
 
         opinions_data = response.get("data").get("opinions")
