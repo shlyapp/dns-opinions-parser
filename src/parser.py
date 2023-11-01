@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 import re
 
 from schemas import Opinion
-from config import get_data_json, headers, headers_list, cookies
+from config import get_data_json, headers, cookies
 
 
 def get_product_id(url: str):
@@ -15,6 +15,11 @@ def get_product_id(url: str):
         cookies=cookies,
         headers=headers,
     )
+
+    if response.status_code != 200:
+        print("[ERROR] Не удается получить соддержимое сайта.")
+        return -1
+
     soup = BeautifulSoup(response.text, "html.parser")
     script_tag = soup.find("script", text=re.compile(r'window.cardMicrodataUrl = \'/product/microdata/[^/]+/\';'))
 
@@ -27,7 +32,12 @@ def get_product_id(url: str):
     return -1
 
 
-def get_opinions(id: int) -> List[Opinion]:
+def get_opinions(url: str) -> List[Opinion]:
+    id = get_product_id(url)
+
+    if id == -1:
+        return
+
     session = requests.Session()
     response = session.post(
             url='https://www.dns-shop.ru/opinion/opinions/get/',
